@@ -1,0 +1,87 @@
+version: "3.9"
+
+services:
+  traefik:
+    image: traefik:v2.9
+    network_mode: "host"
+    restart: always
+    command:
+      - "--api.insecure=false"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls=true"
+      - "--entrypoints.postgres.address=:5432"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=server@dennishilhorst.nl"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`${HOSTNAME}`) && (PathPrefix(`/dashboard/`) || PathPrefix(`/dashboard`))"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.middlewares=dashboard-strip,dashboard-auth"
+      - "traefik.http.middlewares.dashboard-strip.stripprefix.prefixes=/dashboard"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${BASICAUTH}"
+      - "traefik.http.routers.traefik.service=dashboard@internal"
+      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      - "traefik.http.routers.api.rule=Host(`${HOSTNAME}`) && PathPrefix(`/api/`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.api.tls.certresolver=myresolver"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      SCRIPT_NAME: /pgadmin4
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin4.rule=Host(`${HOSTNAME}`) && (PathPrefix(`/pgadmin4/`) || PathPrefix(`/pgadmin4`))"
+      - "traefik.http.routers.pgadmin4.entrypoints=websecure"
+      - "traefik.http.routers.pgadmin4.tls.certresolver=myresolver"
+      - "traefik.http.services.pgadmin4.loadbalancer.server.port=80"
+  portainer:
+    image: portainer/portainer-ce:latest
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`${HOSTNAME}`) && (PathPrefix(`/portainer/`) || PathPrefix(`/portainer`))"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls.certresolver=myresolver"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - "traefik.http.middlewares.portainer-strip.stripprefix.prefixes=/portainer"
+      - "traefik.http.routers.portainer.middlewares=portainer-strip"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+volumes:
+  portainer_data:
+  pgadmin-data:
+  # updater:
+  #   build: .
+  #   container_name: "updater"
+  #   network_mode: "host"
+  #   restart: always
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.updater.rule=Host(`server.alefka.nl`) && PathPrefix(`/updater/`)"
+  #     - "traefik.http.routers.updater.entrypoints=websecure"
+  #     - "traefik.http.routers.updater.tls.certresolver=myresolver"
+  #     - "traefik.http.services.updater.loadbalancer.server.port=5000"
+  #     - "traefik.http.middlewares.updater-strip.stripprefix.prefixes=/updater"
+  #     - "traefik.http.routers.updater.middlewares=updater-strip"
+  #   volumes:
+  #     - "/var/run/docker.sock:/var/run/docker.sock:ro"
+  #     - "/usr/bin:/usr/bin:ro"
+  #     - "/root/repositories:/repositories"
