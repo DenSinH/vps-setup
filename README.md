@@ -1,2 +1,29 @@
 # vps-setup
 Setup instructions for my VPS
+
+1. Log into your VPS provider and connect through SSH.
+2. Install `docker` and `docker-compose` with `apt`
+3. Create a new folder (e.g. `/hosting`)
+4. Put the the `docker-compose.yml` file there, as well as a `.env` file with:
+   - `HOSTNAME`: base URL for domain (e.g. dennishilhorst.nl)
+   - `BASICAUTH`: basicauth setup for traefik. The value should be of the form
+     `<username>:<hashed pw>`, where `<hashed pw>` is a password that is hashed with either MD5, SHA1 or [BCrypt](https://bcrypt-generator.com/)
+   - `PGADMIN_DEFAULT_EMAIL`: email address for pgadmin login
+   - `PGADMIN_DEFAULT_PASSWORD`: password for pgadmin login
+5. Add DNS records to your domain:
+   - an A record (and/or an AAAA record) pointing the `traefik` subdomain to the VPS.
+   - an A record (and/or an AAAA record) pointing the `pgadmin` subdomain to the VPS.
+   - an A record (and/or an AAAA record) pointing the `portainer` subdomain to the VPS.
+6. Run `docker-compose up -d` to start your containers, and check that the connection works!
+
+### To add services on subdomains:
+Simply add an A record pointing to your VPS with the corresponding subdomain, and add the following labels in your project's `docker-compose.yaml`, at the webapp's service:
+```
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.routers.chef-web.rule=Host(`chef.dennishilhorst.nl`)"
+  - "traefik.http.routers.chef-web.entrypoints=websecure"
+  - "traefik.http.routers.chef-web.tls.certresolver=myresolver"
+  - "traefik.http.services.chef-web.loadbalancer.server.port=5000"
+```
+replacing your subdomain. Make sure your app is listening at port 5000. Simply create a new stack on portainer, linking to the corresponding git repo.
