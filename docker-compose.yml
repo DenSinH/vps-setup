@@ -21,15 +21,14 @@ services:
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`${HOSTNAME}`) && (PathPrefix(`/dashboard/`) || PathPrefix(`/dashboard`))"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${HOSTNAME}`)"
       - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.middlewares=dashboard-strip,dashboard-auth"
-      - "traefik.http.middlewares.dashboard-strip.stripprefix.prefixes=/dashboard"
+      - "traefik.http.routers.traefik.middlewares=dashboard-auth"
       - "traefik.http.middlewares.dashboard-auth.basicauth.users=${BASICAUTH}"
       - "traefik.http.routers.traefik.service=dashboard@internal"
       - "traefik.http.routers.traefik.tls.certresolver=myresolver"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
-      - "traefik.http.routers.api.rule=Host(`${HOSTNAME}`) && PathPrefix(`/api/`)"
+      - "traefik.http.routers.api.rule=Host(`traefik.${HOSTNAME}`) && PathPrefix(`/api/`)"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.service=api@internal"
       - "traefik.http.routers.api.tls.certresolver=myresolver"
@@ -47,21 +46,23 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pgadmin4.rule=Host(`${HOSTNAME}`) && (PathPrefix(`/pgadmin4/`) || PathPrefix(`/pgadmin4`))"
+      - "traefik.http.routers.pgadmin4.rule=Host(`pgadmin.${HOSTNAME}`)"
       - "traefik.http.routers.pgadmin4.entrypoints=websecure"
       - "traefik.http.routers.pgadmin4.tls.certresolver=myresolver"
+      - "traefik.http.routers.pgadmin4.middlewares=redirect-to-pgadmin4"
       - "traefik.http.services.pgadmin4.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.redirect-to-pgadmin4.redirectregex.regex=^https://([^/]+)/?$$"
+      - "traefik.http.middlewares.redirect-to-pgadmin4.redirectregex.replacement=https://$$1/pgadmin4"
+      - "traefik.http.middlewares.redirect-to-pgadmin4.redirectregex.permanent=true"
   portainer:
     image: portainer/portainer-ce:latest
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.portainer.rule=Host(`${HOSTNAME}`) && (PathPrefix(`/portainer/`) || PathPrefix(`/portainer`))"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.${HOSTNAME}`)"
       - "traefik.http.routers.portainer.entrypoints=websecure"
       - "traefik.http.routers.portainer.tls.certresolver=myresolver"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-      - "traefik.http.middlewares.portainer-strip.stripprefix.prefixes=/portainer"
-      - "traefik.http.routers.portainer.middlewares=portainer-strip"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
