@@ -54,6 +54,8 @@ services:
       - "traefik.http.middlewares.redirect-to-pgadmin4.redirectregex.regex=^https://([^/]+)/?$$"
       - "traefik.http.middlewares.redirect-to-pgadmin4.redirectregex.replacement=https://$$1/pgadmin4"
       - "traefik.http.middlewares.redirect-to-pgadmin4.redirectregex.permanent=true"
+    networks:
+      - pgadmin-net
   portainer:
     image: portainer/portainer-ce:latest
     restart: always
@@ -69,6 +71,10 @@ services:
 volumes:
   portainer_data:
   pgadmin-data:
+networks:
+  pgadmin-net:
+    name: pgadmin-net
+    driver: bridge
   # updater:
   #   build: .
   #   container_name: "updater"
