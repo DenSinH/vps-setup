@@ -16,6 +16,32 @@ Setup instructions for my VPS
    - an A record (and/or an AAAA record) pointing the `portainer` subdomain to the VPS.
 6. Run `docker-compose up -d` to start your containers, and check that the connection works!
 
+### Firewall setup
+First setup a firewall in your VPS hosting provider, allowing only SSH and HTTP(S) requests (at ports 22, unless changed, 80 and 443). 
+We use `ufw` to setup a firewall from within our VPS, following [this article on digitalocean](https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-ubuntu-20-04).
+The steps are as follows:
+1. Change default incoming/outgoing request policies:
+   ```
+   sudo ufw default deny incoming
+   sudo ufw default allow outgoing
+   ```
+2. Allow incoming SSH connections:
+   ```
+   sudo ufw allow ssh
+   ```
+   or change `ssh` by `22` (default) or whatever SSH port you connect through SSH with.
+3. Allow incoming HTTP(S) connections:
+   ```
+   sudo ufw allow http
+   sudo ufw allow https
+   ```
+4. Enable extra rules as you'd like (enable or disable incoming requests from ports, perhaps filtered by IP).
+5. Start the `ufw` firewall with
+   ```
+   sudo ufw enable
+   ```
+   which may disrupt existing SSH connections.
+
 ### To add services on subdomains:
 Simply add an A record pointing to your VPS with the corresponding subdomain, and add the following labels in your project's `docker-compose.yaml`, at the webapp's service:
 ```
