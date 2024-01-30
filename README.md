@@ -27,3 +27,27 @@ labels:
   - "traefik.http.services.chef-web.loadbalancer.server.port=5000"
 ```
 replacing your subdomain. Make sure your app is listening at port 5000. Simply create a new stack on portainer, linking to the corresponding git repo.
+
+In order to connect your postgres db to the pgadmin network in the main setup (the network is called `pgadmin-net` in the `docker-compose.yml`, simply use the following in your postgres service:
+```
+services:
+  db:
+    image: postgres
+    ...
+    hostname: my-hostname
+    networks:
+      - pgadmin-net
+      - local-net
+  web:
+    ...
+    networks:
+      - local-net
+volumes:
+  dbdata:
+networks:
+  pgadmin-net:
+    external: true
+  local-net:
+
+```
+This makes sure the `db` service connects to the `pgadmin-net` external network, as well as an internal network `local-net`, to connect to the corresponding services. You can now login to the database of the `db` service from the pgadmin service using the hostname `my-hostname` and the username and password that you set!
