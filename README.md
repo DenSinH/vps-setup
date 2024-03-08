@@ -95,3 +95,14 @@ networks:
 
 ```
 This makes sure the `db` service connects to the `pgadmin-net` external network, as well as an internal network `local-net`, to connect to the corresponding services. You can now login to the database of the `db` service from the pgadmin service using the hostname `my-hostname` and the username and password that you set!
+
+## Debugging
+
+It seemed like `snap` was using a lot (a LOT) of memory sometimes, also taking up all the available vCPUs I had for `kswap0` making and reading swap files, so I uninstalled it. However, I had to shut down my VPS while portainer was pulling and redeploying a stack. It failed to delete the old stack, making me unable to do this action again for this stack. Apparently, the stacks have indices, and they are in folders inside the portainer container image. I figured out how to solve it using [this reddit post](https://www.reddit.com/r/portainer/comments/11qawqq/getting_error_target_path_already_exists_when/) combined with [this stackoverflow post](https://stackoverflow.com/questions/34803466/how-to-list-the-content-of-a-named-volume-in-docker-1-9). Basically, what happens is the following (from the reddit post):
+It seems that for some reason the previous "pull and redeploy" didn't complete, at least the last step, "remove the old folder". Then, when you try to rerun it, it cannot create the "old folder" because it already exists.
+
+If you want to be able to rerun "pull and redeploy" again, what you need to do is remove this "old folder".
+You need to go to `{PORTAINER_PATH}/data/compose`, there, you will see different folders that are named with "numbers". Every one of them corresponds with a stack of your portainer. If you see any of them that is named `[NUMBER]-old`, it is the "old folder" I was talking about. The only thing you need to do is remove it (You can rename it if you want to be sure you don't break anything) and try to "pull and redeploy" again. The process should work now
+
+Now to find `PORTAINER_PATH`, run `docker volume list`, and find the volume with portainer's data. Then run `docker volume inspect <portainer_data>` (replacing `portainer_data` with the appropriate name). Go to the folder and remove any `...-old` directories. 
+
