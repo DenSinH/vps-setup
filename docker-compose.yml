@@ -16,6 +16,8 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.http.tls=true"
       - "--entrypoints.postgres.address=:5432"
+      - "--accesslog=true"
+      - "--accesslog.filepath=/var/log/traefik/access.log"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.email=server@dennishilhorst.nl"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
@@ -35,6 +37,7 @@ services:
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./logs:/var/log/traefik"
   pgadmin:
     image: dpage/pgadmin4:latest
     restart: always
