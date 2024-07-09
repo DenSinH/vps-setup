@@ -20,10 +20,36 @@ class LogSchema(msgspec.Struct):
     ClientAddr: str
     ClientHost: str
     ClientPort: str
+    ClientUsername: str
+    DownstreamContentSize: int
+    DownstreamStatus: int
+    Duration: int
+    OriginContentSize: int
+    OriginDuration: int
+    OriginStatus: int
+    Overhead: int
+    RequestAddr: str
+    RequestContentSize: int
+    RequestCount: int
+    RequestHost: str
     RequestMethod: str
     RequestPath: str
-    StatusCode: int
-    ElapsedTime: str
+    RequestPort: str
+    RequestProtocol: str
+    RequestScheme: str
+    RetryAttempts: int
+    RouterName: str
+    ServiceAddr: str
+    ServiceName: str
+    ServiceURL: str
+    StartLocal: str
+    StartUTC: str
+    TLSCipher: str
+    TLSVersion: str
+    entryPointName: str
+    level: str
+    msg: str
+    time: str
 
 log_decoder = msgspec.json.Decoder(LogSchema)
 
@@ -47,11 +73,36 @@ def create_table():
         client_addr TEXT,
         client_host TEXT,
         client_port TEXT,
+        client_username TEXT,
+        downstream_content_size INT,
+        downstream_status INT,
+        duration INT,
+        origin_content_size INT,
+        origin_duration INT,
+        origin_status INT,
+        overhead INT,
+        request_addr TEXT,
+        request_content_size INT,
+        request_count INT,
+        request_host TEXT,
         request_method TEXT,
         request_path TEXT,
-        status_code INT,
-        elapsed_time TEXT,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        request_port TEXT,
+        request_protocol TEXT,
+        request_scheme TEXT,
+        retry_attempts INT,
+        router_name TEXT,
+        service_addr TEXT,
+        service_name TEXT,
+        service_url TEXT,
+        start_local TIMESTAMP,
+        start_utc TIMESTAMP,
+        tls_cipher TEXT,
+        tls_version TEXT,
+        entry_point_name TEXT,
+        level TEXT,
+        msg TEXT,
+        time TIMESTAMP
     );
     """
     cur.execute(create_table_query)
@@ -63,7 +114,7 @@ def process_log_line(log_line) -> LogSchema:
     try:
         log_data = log_decoder.decode(log_line)
         return log_data
-    except msgspec.DecodeError:
+    except msgspec.DecodeError as e:
         return None
 
 def insert_log_to_db(log_entry: LogSchema):
