@@ -96,6 +96,8 @@ def tail_log_file():
             log_entry = process_log_line(line)
             if log_entry:
                 insert_log_to_db(log_entry)
+            else:
+                print("Failed to process log line:", line)
 
             # truncate the log file periodically
             if time.time() - last_truncate_time > TRUNCATE_INTERVAL:
