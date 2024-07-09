@@ -1,8 +1,6 @@
-version: "3.9"
-
 services:
   traefik:
-    image: traefik:v2.9
+    image: traefik:v3.1
     network_mode: "host"
     restart: always
     command:
@@ -15,9 +13,11 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.http.tls=true"
+      - "--entrypoints.websecure.http3=true"
       - "--entrypoints.postgres.address=:5432"
       - "--accesslog=true"
       - "--accesslog.filepath=/var/log/traefik/access.log"
+      - "--accesslog.format=json"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.email=server@dennishilhorst.nl"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
@@ -38,6 +38,33 @@ services:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./logs:/var/log/traefik"
+  accessdb:
+    image: postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    hostname: accessdb
+    expose:
+      - "5432:5432"
+    volumes:
+      - accessdb-data:/var/lib/postgresql/data
+    networks:
+      - pgadmin-net
+  log_processor:
+    build: .
+    environment:
+      DB_HOST: accessdb
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+    volumes:
+      - "./logs:/var/log/traefik"
+    networks:
+      - pgadmin-net
+    depends_on:
+      - traefik
+      - postgres
   pgadmin:
     image: dpage/pgadmin4:latest
     restart: always
@@ -74,6 +101,7 @@ services:
 volumes:
   portainer_data:
   pgadmin-data:
+  accessdb-data:
 networks:
   pgadmin-net:
     name: pgadmin-net
