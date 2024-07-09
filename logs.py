@@ -1,6 +1,7 @@
 import os
 import psycopg2
 import msgspec.json
+import msgspec.structs
 import msgspec
 import time
 
@@ -15,15 +16,16 @@ LOG_FILE_PATH = '/var/log/traefik/access.log'
 CHECK_INTERVAL = 5  # seconds
 TRUNCATE_INTERVAL = 3600  # truncate the log file every hour
 
-schema = msgspec.StructType({
-    "ClientAddr": str,
-    "ClientHost": str,
-    "ClientPort": str,
-    "RequestMethod": str,
-    "RequestPath": str,
-    "StatusCode": int,
-    "ElapsedTime": str
-})
+class LogSchema(msgspec.Struct):
+    ClientAddr: str
+    ClientHost: str
+    ClientPort: str
+    RequestMethod: str
+    RequestPath: str
+    StatusCode: int
+    ElapsedTime: str
+
+log_decoder = msgspec.json.Decoder(LogSchema)
 
 def _get_conn():
     """ Get Postgres connection """
@@ -57,29 +59,21 @@ def create_table():
     cur.close()
     conn.close()
 
-def process_log_line(log_line):
+def process_log_line(log_line) -> LogSchema:
     try:
-        log_data = msgspec.json.decode(log_line, type=schema, strict=False)
-        return (
-            log_data['ClientAddr'],
-            log_data['ClientHost'],
-            log_data['ClientPort'],
-            log_data['RequestMethod'],
-            log_data['RequestPath'],
-            log_data['StatusCode'],
-            log_data['ElapsedTime']
-        )
+        log_data = log_decoder.decode(log_line)
+        return log_data
     except msgspec.DecodeError:
         return None
 
-def insert_log_to_db(log_entry):
+def insert_log_to_db(log_entry: LogSchema):
     conn = _get_conn()
     cur = conn.cursor()
     insert_query = """
         INSERT INTO access_logs (client_addr, client_host, client_port, request_method, request_path, status_code, elapsed_time)
         VALUES (%s, %s, %s, %s, %s, %s, %s);
     """
-    cur.execute(insert_query, log_entry)
+    cur.execute(insert_query, msgspec.structs.astuple(log_entry))
     conn.commit()
     cur.close()
     conn.close()
