@@ -120,11 +120,21 @@ def process_log_line(log_line) -> LogSchema:
 def insert_log_to_db(log_entry: LogSchema):
     conn = _get_conn()
     cur = conn.cursor()
-    insert_query = """
-        INSERT INTO access_logs (client_addr, client_host, client_port, request_method, request_path, status_code, elapsed_time)
-        VALUES (%s, %s, %s, %s, %s, %s, %s);
+    data_tuple = msgspec.structs.astuple(log_entry)
+    insert_query = f"""
+        INSERT INTO {DB_NAME} (
+            client_addr, client_host, client_port, client_username,
+            downstream_content_size, downstream_status, duration, origin_content_size,
+            origin_duration, origin_status, overhead, request_addr, request_content_size,
+            request_count, request_host, request_method, request_path, request_port,
+            request_protocol, request_scheme, retry_attempts, router_name, service_addr,
+            service_name, service_url, start_local, start_utc, tls_cipher, tls_version,
+            entry_point_name, level, msg, time
+        ) VALUES (
+            {', '.join('%s' for i in data_tuple)}
+        );
     """
-    cur.execute(insert_query, msgspec.structs.astuple(log_entry))
+    cur.execute(insert_query, data_tuple)
     conn.commit()
     cur.close()
     conn.close()
