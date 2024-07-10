@@ -16,7 +16,6 @@ DB_USER = os.environ['DB_USER']
 DB_PASS = os.environ['DB_PASS']
 
 LOG_FILE_PATH = '/var/log/traefik/access.log'
-CHECK_INTERVAL = 5  # seconds
 TRUNCATE_INTERVAL = 3600  # truncate the log file every hour
 
 class LogEntry(msgspec.Struct):
@@ -138,11 +137,13 @@ def insert_log_to_db(log_entry: LogEntry):
             {', '.join('%s' for i in data_tuple)}
         );
     """
-    cur.execute(insert_query, data_tuple)
-    conn.commit()
-    cur.close()
-    conn.close()
-
+    try:
+        cur.execute(insert_query, data_tuple)
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logging.warning(f"Failed to insert log line {log_entry}:\n{e}")
 
 def truncate_log_file():
     """ Truncate the log file """
@@ -165,7 +166,7 @@ def tail_log_file():
             if log_entry:
                 insert_log_to_db(log_entry)
             else:
-                logging.info(f"Failed to process log line: {line}")
+                logging.info(f"Failed to process log line: {line}\n{e}")
 
             # truncate the log file periodically
             if time.time() - last_truncate_time > TRUNCATE_INTERVAL:
