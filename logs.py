@@ -3,7 +3,10 @@ import psycopg2
 import msgspec.json
 import msgspec.structs
 import msgspec
+from sh import tail
+import logging
 import time
+
 
 # Database connection parameters from environment variables
 DB_HOST = os.environ['DB_HOST']
@@ -16,7 +19,7 @@ LOG_FILE_PATH = '/var/log/traefik/access.log'
 CHECK_INTERVAL = 5  # seconds
 TRUNCATE_INTERVAL = 3600  # truncate the log file every hour
 
-class LogSchema(msgspec.Struct):
+class LogEntry(msgspec.Struct):
     ClientAddr: str
     ClientHost: str
     ClientPort: str
@@ -51,7 +54,7 @@ class LogSchema(msgspec.Struct):
     msg: str
     time: str
 
-log_decoder = msgspec.json.Decoder(LogSchema)
+log_decoder = msgspec.json.Decoder(LogEntry)
 
 def _get_conn():
     """ Get Postgres connection """
@@ -65,6 +68,7 @@ def _get_conn():
 
 def create_table():
     """ Create access log table if it does not exist yet """
+    logging.info(f"Creating database {DB_NAME}")
     conn = _get_conn()
     cur = conn.cursor()
     create_table_query = f"""
@@ -110,14 +114,14 @@ def create_table():
     cur.close()
     conn.close()
 
-def process_log_line(log_line) -> LogSchema:
+def process_log_line(log_line) -> LogEntry:
     try:
         log_data = log_decoder.decode(log_line)
         return log_data
     except msgspec.DecodeError as e:
         return None
 
-def insert_log_to_db(log_entry: LogSchema):
+def insert_log_to_db(log_entry: LogEntry):
     conn = _get_conn()
     cur = conn.cursor()
     data_tuple = msgspec.structs.astuple(log_entry)
@@ -139,18 +143,21 @@ def insert_log_to_db(log_entry: LogSchema):
     cur.close()
     conn.close()
 
+
+def truncate_log_file():
+    """ Truncate the log file """
+    with open(LOG_FILE_PATH, "w") as log_file:
+        log_file.truncate()
+        logging.info("Log file truncated.")
+
+
 def tail_log_file():
     """ Tail and process access log entries """
+    logging.info("Tailing log file")
     last_truncate_time = time.time()
-    with open(LOG_FILE_PATH, 'r+') as log_file:
-        # move the cursor to the end of the file
-        # this is so we do not duplicate entries on subsequent runs
-        log_file.seek(0, os.SEEK_END)
-        
-        while True:
-            line = log_file.readline()
+    while True:
+        for line in tail("-f", LOG_FILE_PATH, _iter=True):
             if not line:
-                time.sleep(CHECK_INTERVAL)
                 continue
             
             # process and insert line
@@ -158,17 +165,23 @@ def tail_log_file():
             if log_entry:
                 insert_log_to_db(log_entry)
             else:
-                print("Failed to process log line:", line)
+                logging.info(f"Failed to process log line: {line}")
 
             # truncate the log file periodically
             if time.time() - last_truncate_time > TRUNCATE_INTERVAL:
-                try:
-                    log_file.truncate(0)
-                    last_truncate_time = time.time()
-                except OSError:
-                    print("Failed to truncate log file...")
-                    pass
+                break
+        
+        try:
+            truncate_log_file()
+            last_truncate_time = time.time()
+        except OSError as e:
+            logging.info(f"Failed to truncate log file: {e}")
+
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        format="[%(asctime)s %(name)s:%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
     create_table()
     tail_log_file()
