@@ -77,23 +77,23 @@ def create_table():
         client_host TEXT,
         client_port TEXT,
         client_username TEXT,
-        downstream_content_size INT,
-        downstream_status INT,
-        duration INT,
-        origin_content_size INT,
-        origin_duration INT,
-        origin_status INT,
-        overhead INT,
+        downstream_content_size BIGINT,
+        downstream_status BIGINT,
+        duration BIGINT,
+        origin_content_size BIGINT,
+        origin_duration BIGINT,
+        origin_status BIGINT,
+        overhead BIGINT,
         request_addr TEXT,
-        request_content_size INT,
-        request_count INT,
+        request_content_size BIGINT,
+        request_count BIGINT,
         request_host TEXT,
         request_method TEXT,
         request_path TEXT,
         request_port TEXT,
         request_protocol TEXT,
         request_scheme TEXT,
-        retry_attempts INT,
+        retry_attempts BIGINT,
         router_name TEXT,
         service_addr TEXT,
         service_name TEXT,
@@ -118,6 +118,7 @@ def process_log_line(log_line) -> LogEntry:
         log_data = log_decoder.decode(log_line)
         return log_data
     except msgspec.DecodeError as e:
+        logging.warn(f"Failed to process log line: {log_line}:\n{e}")
         return None
 
 def insert_log_to_db(log_entry: LogEntry):
@@ -165,8 +166,6 @@ def tail_log_file():
             log_entry = process_log_line(line)
             if log_entry:
                 insert_log_to_db(log_entry)
-            else:
-                logging.info(f"Failed to process log line: {line}\n{e}")
 
             # truncate the log file periodically
             if time.time() - last_truncate_time > TRUNCATE_INTERVAL:
