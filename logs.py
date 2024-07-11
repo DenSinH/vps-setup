@@ -118,7 +118,7 @@ def process_log_line(log_line) -> LogEntry:
         log_data = log_decoder.decode(log_line)
         return log_data
     except msgspec.DecodeError as e:
-        logging.warn(f"Failed to process log line: {log_line}:\n{e}")
+        logging.warning(f"Failed to process log line: {log_line}:\n{e}")
         return None
 
 def insert_log_to_db(log_entry: LogEntry):
