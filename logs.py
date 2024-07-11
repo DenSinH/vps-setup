@@ -18,7 +18,7 @@ DB_PASS = os.environ['DB_PASS']
 LOG_FILE_PATH = '/var/log/traefik/access.log'
 TRUNCATE_INTERVAL = 3600  # truncate the log file every hour
 
-class LogEntry(msgspec.Struct):
+class LogEntry(msgspec.Struct, kw_only=True):
     ClientAddr: str
     ClientHost: str
     ClientPort: str
@@ -40,10 +40,10 @@ class LogEntry(msgspec.Struct):
     RequestProtocol: str
     RequestScheme: str
     RetryAttempts: int
-    RouterName: str
-    ServiceAddr: str
-    ServiceName: str
-    ServiceURL: str
+    RouterName: str = ''
+    ServiceAddr: str = ''
+    ServiceName: str = ''
+    ServiceURL: str = ''
     StartLocal: str
     StartUTC: str
     TLSCipher: str
