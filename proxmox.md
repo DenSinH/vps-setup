@@ -47,3 +47,6 @@ To save your ssd a litte, it may be worth disabling some write-heavy services an
 
 ### Power saving stuff
 - I enabled power saving mode in my BIOS (F2 on boot for Intel NUCs)
+
+## Setting up Pi-hole
+I followed [this tutorial](https://www.naturalborncoder.com/2023/07/installing-pi-hole-on-proxmox/)
