@@ -50,3 +50,8 @@ To save your ssd a litte, it may be worth disabling some write-heavy services an
 
 ## Setting up Pi-hole
 I followed [this tutorial](https://www.naturalborncoder.com/2023/07/installing-pi-hole-on-proxmox/)
+
+## Setting up HA
+- Setup VM through [this helper script](https://tteck.github.io/Proxmox/#home-assistant-os-vm)
+  - This sets the IP to some DHCP assigned IP at first, you may want to change this through the settings in the VM.
+- Pass through Zigbee dongle using [this tutorial](https://smarthomescene.com/guides/how-to-passthrough-usb-devices-to-home-assistant-in-proxmox/)
