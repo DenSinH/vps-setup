@@ -55,3 +55,6 @@ I followed [this tutorial](https://www.naturalborncoder.com/2023/07/installing-p
 - Setup VM through [this helper script](https://tteck.github.io/Proxmox/#home-assistant-os-vm)
   - This sets the IP to some DHCP assigned IP at first, you may want to change this through the settings in the VM.
 - Pass through Zigbee dongle using [this tutorial](https://smarthomescene.com/guides/how-to-passthrough-usb-devices-to-home-assistant-in-proxmox/)
+
+### Flashing Xiaomi temperature & humidity sensor
+- See [this link](https://www.zigbee2mqtt.io/devices/LYWSD03MMC.html)
