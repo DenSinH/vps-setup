@@ -47,7 +47,21 @@ To save your ssd a litte, it may be worth disabling some write-heavy services an
 
 ### Power saving stuff
 - I enabled power saving mode in my BIOS (F2 on boot for Intel NUCs)
-
+- Turning off the monitor after 60 seconds of inactivity: I followed the tips in [this thread](https://forum.proxmox.com/threads/turn-off-proxmox-primary-monitor.120769/):
+  - `nano /root/down_monitor.sh`
+  - add the following lines:
+    ```
+    #!/bin/bash
+    setterm -term linux -blank 1 -powersave powerdown -powerdown 1 </dev/tty1 >/dev/tty1
+    ```
+  - `chmod +x /root/down_monitor.sh`
+  - run `crontab -e`, select your favorite editor and add a line `@reboot /root/down_monitor.sh`
+  - Run `bash /root/down_monitor.sh` to enable it for this session.
+  - Also do the other tip:
+  - `nano /etc/default/grub`
+  - Replace `GRUB_CMDLINE_LINUX_DEFAULT="quiet"` with `GRUB_CMDLINE_LINUX_DEFAULT="quiet consoleblank=60"`
+  - `update-grub`
+  - Reboot
 ### Set up a VPN
 Set up a vpn with [tailscale](https://tailscale.com/) and add all necessary devices.
 
