@@ -62,6 +62,9 @@ To save your ssd a litte, it may be worth disabling some write-heavy services an
   - Replace `GRUB_CMDLINE_LINUX_DEFAULT="quiet"` with `GRUB_CMDLINE_LINUX_DEFAULT="quiet consoleblank=60"`
   - `update-grub`
   - Reboot
+
+I also ran the `install-post.sh` script from [this repo](https://github.com/extremeshok/xshok-proxmox)
+
 ### Set up a VPN
 Set up a vpn with [tailscale](https://tailscale.com/) and add all necessary devices.
 
