@@ -76,5 +76,8 @@ I followed [this tutorial](https://www.naturalborncoder.com/2023/07/installing-p
   - This sets the IP to some DHCP assigned IP at first, you may want to change this through the settings in the VM.
 - Pass through Zigbee dongle using [this tutorial](https://smarthomescene.com/guides/how-to-passthrough-usb-devices-to-home-assistant-in-proxmox/)
 
+### Monitoring proxmox through HA
+Follow [this tutorial](https://smarthomescene.com/guides/how-to-monitor-and-control-proxmox-virtual-environment-in-home-assistant/).
+
 ### Flashing Xiaomi temperature & humidity sensor
 - See [this link](https://www.zigbee2mqtt.io/devices/LYWSD03MMC.html)
