@@ -39,7 +39,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./logs:/var/log/traefik"
   accessdb:
-    image: postgres
+    image: postgres:16.8
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -73,7 +73,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
       SCRIPT_NAME: /pgadmin4
     volumes:
-      - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin-data:/var/lib/pgadmin
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pgadmin4.rule=Host(`pgadmin.${HOSTNAME}`)"
