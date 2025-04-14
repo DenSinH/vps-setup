@@ -40,6 +40,7 @@ services:
       - "./logs:/var/log/traefik"
   accessdb:
     image: postgres:16.8
+    restart: always
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -53,6 +54,7 @@ services:
       - pgadmin-net
   log_processor:
     build: .
+    restart: always
     environment:
       DB_HOST: accessdb
       DB_NAME: ${DB_NAME}
