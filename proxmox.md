@@ -44,6 +44,11 @@ To save your ssd a litte, it may be worth disabling some write-heavy services an
   ```
   though it seemed `pvesr.timer` did not exist.
 - Install [log2ram](https://github.com/azlux/log2ram) and make sure `rsync` is installed (reboot after installing!)
+- Mount `/tmp` to a ramdisk:
+  ```
+  sudo cp /usr/share/systemd/tmp.mount /etc/systemd/system/
+  systemctl enable tmp.mount
+  ```
 
 ### Power saving stuff
 - I enabled power saving mode in my BIOS (F2 on boot for Intel NUCs)
